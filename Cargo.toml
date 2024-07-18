@@ -1,0 +1,29 @@
+[package]
+name = "example-queries-cosmwasm-verify"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "example_queries_cosmwasm_verify"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+cosmwasm-std = { version = "1.0.0" }
+cw-storage-plus = "0.13.2"
+cosmwasm-schema = "1"
+schemars = "0.8.8"
+serde = { version = "1.0.137", default-features = false, features = ["derive"] }
+k256 = { version = "0.11", default-features = false, features = ["ecdsa"] }
+sha3 = { version = "0.9.1", default-features = false }
+generic-array = { version = "0.14.4" }
+byteorder = "1.5.0"
+thiserror = "1.0.31"
+anyhow = "1"
+wormhole-cosmwasm = { version = "0.1.0", features = ["library"] }
+wormhole-query-sdk = { git = "https://github.com/wormholelabs-xyz/wormhole-query-sdk-rust", version = "0.0.1", rev = "0f34cb470f4e3137b53aa91adcbb0c7def280925" }
+
+[dev-dependencies]
+hex = "0.4.3"
+
+[patch.crates-io]
+wormhole-cosmwasm = { git = "https://github.com/wormhole-foundation/wormhole" }
