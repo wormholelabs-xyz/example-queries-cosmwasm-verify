@@ -27,7 +27,7 @@ use cw_wormhole::{
 };
 
 use wormhole_query_sdk::{
-    structs::{ChainSpecificResponse, QueryResponse},
+    structs::{ChainSpecificQuery,ChainSpecificResponse, QueryResponse},
     MESSAGE_PREFIX,
 };
 
@@ -270,12 +270,45 @@ pub fn weth_total_supply(
     // Parse the response.
     let resp = parse_and_verify_query_response(&resp_bytes).unwrap();
 
+    if resp.request.requests.len() != 1 {
+        return ExampleQueriesError::UnexpectedNumberOfRequests.std_err();
+    }
+
+    // TODO: Could allow the other eth query types.
+
+    // Verify the request is for a totalSupply query. 
+    let per_chain_req = &resp.request.requests[0];
+    match &per_chain_req.query {
+        ChainSpecificQuery::EthCallQueryRequest(eth_req) => {
+            if eth_req.call_data.len() != 1 {
+                return ExampleQueriesError::UnexpectedNumberOfCallData.std_err();
+            }
+            let call_data = &eth_req.call_data[0];
+            if call_data.data.len() != 4 {
+                 return ExampleQueriesError::UnexpectedCallDataLength.std_err();
+            }   
+            // totalSupply() is 0x18160ddd                       
+            if call_data.data[0] != 0x18 || call_data.data[1] != 0x16 || call_data.data[2] != 0x0d || call_data.data[3] != 0xdd {
+                return ExampleQueriesError::UnexpectedCallType.std_err();
+            }            
+        }
+        ChainSpecificQuery::EthCallByTimestampQueryRequest(_) => {
+            return ExampleQueriesError::UnsupportedRequestType.std_err();
+        }
+        ChainSpecificQuery::EthCallWithFinalityQueryRequest(_) => {
+            return ExampleQueriesError::UnsupportedRequestType.std_err();
+        }
+        ChainSpecificQuery::SolanaAccountQueryRequest(_) => {
+            return ExampleQueriesError::UnsupportedRequestType.std_err();
+        }
+    }
+
     if resp.responses.len() != 1 {
         return ExampleQueriesError::UnexpectedNumberOfResponses.std_err();
     }
 
-    let pcqr = &resp.responses[0];
-    match &pcqr.response {
+    let per_chain_resp = &resp.responses[0];
+    match &per_chain_resp.response {
         ChainSpecificResponse::EthCallQueryResponse(eth_response) => {
             if eth_response.results.len() != 1 {
                 return ExampleQueriesError::UnexpectedNumberOfResults.std_err();
@@ -283,10 +316,10 @@ pub fn weth_total_supply(
             if eth_response.results[0].len() != 32 {
                 return ExampleQueriesError::UnexpectedResultLength.std_err();
             }
-            let mut rdr = Cursor::new(&eth_response.results[0]);
-            let total_supply = rdr.read_u32::<BigEndian>()
+            let mut rdr = Cursor::new(&eth_response.results[0][16..32]);
+            let total_supply = rdr.read_u128::<BigEndian>()
                 .or_else(|_| ExampleQueriesError::InvalidTotalSupply.std_err())?;
-            let result = WethTotalSupplyResponse{total_supply: total_supply as usize};
+            let result = WethTotalSupplyResponse{total_supply: total_supply};
             return Ok(result)
         }
         ChainSpecificResponse::EthCallByTimestampQueryResponse(_) => {

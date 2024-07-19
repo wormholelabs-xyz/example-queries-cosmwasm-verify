@@ -4,10 +4,12 @@ This is a demo of verifying and parsing [Wormhole Queries](https://wormhole.com/
 
 This example uses the Wormhole Core contract to get the current guardian set.
 
-Since the core contract does not expose a function to verify a payload, this example replicates that code
-in `verify_signatures_from_hash`.
+Since the core contract does not expose a function to verify signatures against a payload, this example replicates
+that code from the `parse_and_verify_vaa` core contract method in `verify_signatures_from_hash`.
 
 This example also uses the `wormhole-query-sdk-rust` repo from Wormhole Labs to parse the query responses.
+
+It provides a trivial example of parsing a query response for a `totalSupply` call on the WETH contract.
 
 ## Running the Tests
 

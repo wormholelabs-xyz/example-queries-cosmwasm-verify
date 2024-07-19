@@ -3,7 +3,7 @@ use cw_wormhole::{
     state::GuardianAddress,
 };
 
-use wormhole_query_sdk::structs::ChainSpecificResponse;
+use wormhole_query_sdk::structs::{ChainSpecificQuery, ChainSpecificResponse};
 
 use example_queries_cosmwasm_verify::contract::{compute_hash, parse_and_verify_query_response, verify_signatures, verify_signatures_from_hash, weth_total_supply};
 
@@ -131,7 +131,7 @@ fn parse_and_verify_query_response_works() {
     let resp_bytes = hex::decode(resp_bytes).expect("resp_bytes decode failed");
     let resp_bytes = resp_bytes.as_slice();
 
-    let resp: wormhole_query_sdk::structs::QueryResponse = parse_and_verify_query_response(&resp_bytes).unwrap();
+    let resp = parse_and_verify_query_response(&resp_bytes).unwrap();
 
     assert_eq!(1, resp.version);
     assert_eq!(0, resp.request_chain_id); // Zero means off chain request.
@@ -140,6 +140,31 @@ fn parse_and_verify_query_response_works() {
     let request_id = "51ced87ef0a0bb371964f793bb665a01435d57c9dc79b9fb6f31323f99f557ee0fa583718753cb3b35fe7c2e9bab2afde3f8cfdbeee0432804cb3c9146027a9401";
     let request_id = hex::decode(request_id).expect("request_id decode failed");
     assert_eq!(request_id, resp.request_id);
+
+    let per_chain_req = &resp.request.requests[0];
+    match &per_chain_req.query {
+        ChainSpecificQuery::EthCallQueryRequest(eth_req) => {
+            assert_eq!(1, eth_req.call_data.len());
+            let call_data = &eth_req.call_data[0];
+            assert_eq!(4, call_data.data.len());
+            let method = "06fdde03";
+            let method = hex::decode(method).expect("method decode failed");
+            let method = method.as_slice();    
+            assert_eq!(method, call_data.data);       
+            if call_data.data[0] != 0x06 || call_data.data[1] != 0xfd || call_data.data[2] != 0xde || call_data.data[3] != 0x03 {
+                panic!("Call data is invalid")
+            }
+        }
+        ChainSpecificQuery::EthCallByTimestampQueryRequest(_) => {
+            panic!("EthCallByTimestampQueryRequest unexpected")
+        }
+        ChainSpecificQuery::EthCallWithFinalityQueryRequest(_) => {
+            panic!("EthCallWithFinalityQueryRequest unexpected")
+        }
+        ChainSpecificQuery::SolanaAccountQueryRequest(_) => {
+            panic!("SolanaAccountQueryRequest unexpected")
+        }
+    }
 
     assert_eq!(1, resp.responses.len());
 
@@ -173,6 +198,7 @@ fn parse_and_verify_query_response_works() {
 
 #[test]
 fn weth_total_supply_works() {
+    // This query response was generated using the mock api against mainnet ethereum. The mock signs requests using the devnet guardian key.
     let guardians = [GuardianAddress {
         bytes: hex::decode("beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe")
             .expect("guardian_addr decode failed")
@@ -184,14 +210,14 @@ fn weth_total_supply_works() {
         addresses: guardians.to_vec(),
     };
 
-    // 64 bytes of signature data, one byte of recovery ID and the last byte is the guardian index.
-    let sig_bytes = "11993001dd83574a5c5f78ffb869c3bf3636ae542d1cb7de7442eeed190c64465f19c3ca9df2467e07b147dadbbe4ef9520d3f61f1a8891d58e6537971ca69110000";
+    let sig_bytes = "f6f7718691587463a4fd5a0a83b8e79f90d3c0a865e906d2b1a57817fc23685400ab16efc0bfe6b25bd114f1d0f38c075d89d191c290407eb3b7392e5e87e13e0000";
     let sig_bytes = hex::decode(sig_bytes).expect("sig_bytes decode failed");
     let sig_bytes = sig_bytes.as_slice();
     
-    let resp_bytes = "01000031fd6b668d5c0a237e8294eb3de0025c9082ec691566bdfc8a8978f0931724367be17754357d3991f2e1f44b924ba0a6eee5ebca63618e64605b1c4e41edc32a01000000330100000001010002010000002600000005307833656401ddb64fe46a91d46ee29420539fc25fd07c5fea3e0000000418160ddd010002010000005500000000000003ed5f4a04cc1ab02eef18a25213c6a3b89cc6422b63c66ea1f85ac8bcd61df8d8b700061d76666c8b8001000000200000000000000000000000000000000000000000000000000000000000000000";
+    let resp_bytes = "010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037010000002a010002010000002a0000000930783133363463306201c02aaa39b223fe8d0a0e5c4f27ead9083c756cc20000000418160ddd01000201000000550000000001364c0b6c6c01c7fb4ad573a674025202155f3a60829e780d7312b9e131105ea068ac2900061d8af2b674c001000000200000000000000000000000000000000000000000000242ad82df886ac1ea6ca5";
     let resp_bytes = hex::decode(resp_bytes).expect("resp_bytes decode failed");
     let resp_bytes = resp_bytes.as_slice();
 
-    weth_total_supply(&sig_bytes, &guardian_set, &resp_bytes).unwrap();
+    let result = weth_total_supply(&sig_bytes, &guardian_set, &resp_bytes).unwrap();
+    assert_eq!(2732728544229543524330661, result.total_supply);
 }

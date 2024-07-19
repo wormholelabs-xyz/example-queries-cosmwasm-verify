@@ -52,5 +52,5 @@ pub struct ComputeHashResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct WethTotalSupplyResponse {
-    pub total_supply: usize,
+    pub total_supply: u128,
 }

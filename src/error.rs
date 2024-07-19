@@ -39,6 +39,26 @@ pub enum ExampleQueriesError {
     #[error("FailedToParseResponse")]
     FailedToParseResponse,
             
+    /// Unexpected number of requests in query response
+    #[error("UnexpectedNumberOfRequests")]
+    UnexpectedNumberOfRequests,
+                
+    /// Unsupported request type in query response
+    #[error("UnsupportedRequestType")]
+    UnsupportedRequestType,     
+                
+    /// Unexpected number of call data in query response
+    #[error("UnexpectedNumberOfCallData")]
+    UnexpectedNumberOfCallData, 
+                
+    /// Unexpected call data length in query response
+    #[error("UnexpectedCallDataLength")]
+    UnexpectedCallDataLength,     
+                
+    /// Unexpected call type in query response
+    #[error("UnexpectedCallType")]
+    UnexpectedCallType,       
+                
     /// Unexpected number of responses in query response
     #[error("UnexpectedNumberOfResponses")]
     UnexpectedNumberOfResponses,

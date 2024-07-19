@@ -872,7 +872,7 @@ checksum = "9c8d87e72b64a3b4db28d11ce29237c246188f4f51057d65a7eab63b7987e423"
 [[package]]
 name = "wormhole-cosmwasm"
 version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole#80c26eb8729a4aab5ff338c1ac01a526531ead50"
+source = "git+https://github.com/wormhole-foundation/wormhole?rev=31b01629087c610c12fa8e84069786139dc0b6bd#31b01629087c610c12fa8e84069786139dc0b6bd"
 dependencies = [
  "cosmwasm-std",
  "cosmwasm-storage",

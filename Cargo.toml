@@ -26,4 +26,4 @@ wormhole-query-sdk = { git = "https://github.com/wormholelabs-xyz/wormhole-query
 hex = "0.4.3"
 
 [patch.crates-io]
-wormhole-cosmwasm = { git = "https://github.com/wormhole-foundation/wormhole" }
+wormhole-cosmwasm = { git = "https://github.com/wormhole-foundation/wormhole", rev = "31b01629087c610c12fa8e84069786139dc0b6bd" }
